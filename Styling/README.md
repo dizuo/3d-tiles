@@ -213,6 +213,7 @@ The following types are supported:
 * `Undefined`
 * `Number`
 * `String`
+* `Array`
 * `vec2`
 * `vec3`
 * `vec4`
@@ -226,6 +227,7 @@ Example expressions for different types include the following:
 * `undefined`
 * `1.0`, `NaN`, `Infinity`
 * `'Cesium'`, `"Cesium"`
+* `[0, 1, 2]`
 * `vec2(1.0, 2.0)`
 * `vec3(1.0, 2.0, 3.0)`
 * `vec4(1.0, 2.0, 3.0, 4.0)`
@@ -244,6 +246,8 @@ Boolean(1) === true
 Number('1') === 1
 String(1) === '1'
 ```
+
+`Boolean` and `Number` follow JavaScript conventions. `String` follows [string conversions](#string-conversions).
 
 These are essentially casts, not constructor functions.
 
@@ -392,7 +396,7 @@ Regular expressions have a `toString` function for explicit (and implicit) conve
 
 Regular expressions do not expose any other functions or a `prototype` object.
 
-The operators `=~` and `!~` are overloaded for regular expressions. The `=~` operator matches the behavior of the `test` function, and tests the specified string for a match. It returns `true` if one is found, and `false` if not found. The `!~` operator is the inverse of the `=~` operator. It returns `true` if no matches are found, and `false` if a match is found. Both operators are communitive.
+The operators `=~` and `!~` are overloaded for regular expressions. The `=~` operator matches the behavior of the `test` function, and tests the specified string for a match. It returns `true` if one is found, and `false` if not found. The `!~` operator is the inverse of the `=~` operator. It returns `true` if no matches are found, and `false` if a match is found. Both operators are commutative.
 
 For example, the following expressions all evaluate to true:
 ```
@@ -403,18 +407,53 @@ regExp('a') !~ 'bcd'
 'bcd' !~ regExp('a')
 ```
 
-If no `RegExp` is supplied as and operand, both operators will return `false`.
+### Type Rules
 
-If both operands are of type `RegExp`, the left operand will be treated as the regular expression which is performing the match, and the right operand will be treated as the object which the test is being performed on. For example, `regExp('a') =~ regExp('abc')` will match the behavior of `regExp('a').test(regExp('abc'))`.
+The styling language does not allow for implicit type conversions, unless stated below. Expressions like `vec3(1.0) === `vec4(1.0)` and `"5" < 6` are not valid.
 
-Regular expressions are treated as `NaN` when performing operations with operators other than `=~` and `!~`.
+* Unary operators `+` and `-` operate only on number and vector expressions.
+* Unary operator `!` operates only on boolean expressions.
+* Binary operators `<`, `<=`, `>`, and `>=` operate only on number expressions.
+* Binary operators `||` and `&&` operate only on boolean expressions.
+* Binary operator `+` operates on the following expressions:
+    * Number expressions
+    * Vector expressions of the same type
+    * If at least one expressions is a string, the other expressions is converted to a string following the [string conversions](#string-conversions) and the operation returns a concatenated string. E.g. `"name" + 10` evaluates to `"name10"`.
+* Binary operator `-` operates on the following expressions
+    * Number expressions
+    * Vector expressions of the same type
+* Binary operator `*` operates on the following expressions
+    * Number expressions
+    * Vector expressions of the same type
+    * Mix of number expression and vector expression. E.g. `3 * vec3(1.0)` and `vec2(1.0) * 3`.
+* Binary operator `/` operates on the following expressions
+    * Number expressions
+    * Vector expressions of the same type
+    * Vector expression followed by number expression. E.g.`vec3(1.0) / 3`.
+* Binary operator `%` operates on the following expressions
+    * Number expressions
+    * Vector expressions of the same type
+* Binary equality operators `===` and `!==` operate on any expressions. The operation returns `false` if the expression types do not match.
+* Binary regexp operators `=~` and `!~` requires one argument to be a string expression and the other to be a RegExp expression.
+* Ternary operator `? :` conditional argument must be a boolean expression.
 
+### String Conversions
 
-### Conversions
+`vec2`, `vec3`, `vec4` and `RegExp` expressions are converted to strings using their `toString` methods. All other types follow JavaScript conventions.
 
-Style expressions follow JavaScript conversion rules.
-
-For conversions involving `vec2`, `vec3`, `vec4`, and `RegExp`, they are treated as JavaScript objects.  For example, `vec4` implicitly converts to `NaN` with `===`, `==`, `!==`, `!=`, `>`, `>=`, `<`, and `<=` operators.  In Boolean expressions, `vec2`, `vec3`, and `vec4` implicitly convert to `true`, e.g., `!!vec4(1.0) === true`.  In string expressions, `vec2`, `vec3`, and `vec4` implicitly converts to `String` using their `toString` function.
+* `true` - `"true"`
+* `false` - `"false"`
+* `null` - `"null"`
+* `undefined` - `"undefined"`
+* `5.0` - `"5"`
+* `NaN` - `"NaN"`
+* `Infinity` - `"Infinity"`
+* `"name"` - `"name"`
+* `[0, 1, 2]` - `"[0, 1, 2]"`
+* `vec2(1, 2)` - `"(1, 2)"`
+* `vec3(1, 2, 3)` - `"(1, 2, 3)"`
+* `vec4(1, 2, 3, 4)` - `"(1, 2, 3, 4)"`
+* `RegExp('a') - `"/a/"`
 
 ### Constants
 
@@ -460,6 +499,7 @@ Variables may be any of the supported native JavaScript types:
 * `Undefined`
 * `Number`
 * `String`
+* `Array`
 
 For example:
 ```json
